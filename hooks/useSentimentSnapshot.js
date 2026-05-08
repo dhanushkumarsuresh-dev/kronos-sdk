@@ -8,10 +8,14 @@ export function useSentimentSnapshot({ config, asset }) {
     const res = await fetch('/api/sentiment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKeys: config.apiKeys, asset }),
+      body: JSON.stringify({ apiKeys: config.apiKeys, asset, verbose: config?.verbose !== false }),
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(json.message || `HTTP ${res.status}`);
+    if (!res.ok) {
+      const err = new Error(json.message || `HTTP ${res.status}`);
+      err.debug = json.debug;
+      throw err;
+    }
     return json;
   }, [config, asset]);
 
@@ -19,6 +23,7 @@ export function useSentimentSnapshot({ config, asset }) {
     enabled,
     intervalMs: 5 * 60_000,
     fetcher,
+    source: 'sentiment',
     deps: [asset, config?.apiKeys?.finnhub],
   });
 }
