@@ -1,4 +1,5 @@
 import { fetchPnL } from '../../utils/eToroClient';
+import { createLogger } from '../../utils/httpLog';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -6,13 +7,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { apiKeys, mode = 'demo' } = req.body || {};
+  const { apiKeys, mode = 'demo', verbose = true } = req.body || {};
+  const logger = createLogger({ verbose });
+  const debug = () => ({ requests: logger.entries });
+
   if (!apiKeys?.etoroPublic || !apiKeys?.etoroUser) {
-    return res.status(400).json({ message: 'Missing eToro credentials.' });
+    return res.status(400).json({ message: 'Missing eToro credentials.', debug: debug() });
   }
 
   try {
-    const data = await fetchPnL(apiKeys, mode);
+    const data = await fetchPnL(apiKeys, mode, { fetcher: logger.fetch });
     return res.status(200).json({
       equity: Number(data?.equity ?? 0),
       credit: Number(data?.credit ?? 0),
@@ -20,15 +24,17 @@ export default async function handler(req, res) {
       dailyPnL: Number(data?.dailyPnL ?? data?.profit ?? 0),
       mode,
       raw: data,
+      debug: debug(),
     });
   } catch (error) {
-    const status = error.status === 403 ? 403 : 502;
+    const status = error.status === 403 ? 403 : error.status || 502;
     return res.status(status).json({
       message: error.message || 'Portfolio fetch failed.',
       hint:
         error.status === 403
-          ? `403 from eToro. Check that Account Mode (${mode}) matches your account, and that your app has the required scopes approved.`
+          ? `403 from eToro. Switch Account Mode (currently ${mode}) or check app scopes.`
           : undefined,
+      debug: debug(),
     });
   }
 }

@@ -18,7 +18,15 @@ export default function LogViewer({ logs }) {
           <div key={log.id} className={`row ${log.level}`}>
             <span className="time">{log.time}</span>
             <span className="dot" />
-            <span className="msg">{log.msg}</span>
+            <span className="msg">
+              {log.msg}
+              {log.details && (
+                <details className="details">
+                  <summary>view payload</summary>
+                  <pre>{JSON.stringify(log.details, null, 2)}</pre>
+                </details>
+              )}
+            </span>
           </div>
         ))
       )}
@@ -66,6 +74,30 @@ export default function LogViewer({ logs }) {
         .row.error .msg { color: #ff7b72; }
         .row.warn .dot { background: #d29922; }
         .row.warn .msg { color: #e3b341; }
+        .details {
+          margin-top: 4px;
+          font-size: 11px;
+          color: #6e7888;
+        }
+        .details summary {
+          cursor: pointer;
+          color: #58a6ff;
+          letter-spacing: 1px;
+        }
+        .details pre {
+          margin-top: 6px;
+          padding: 8px 10px;
+          background: #0a0e1a;
+          border: 1px solid #1d2433;
+          border-radius: 4px;
+          color: #e6edf3;
+          font-size: 11px;
+          line-height: 1.5;
+          overflow: auto;
+          max-height: 280px;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
       `}</style>
     </div>
   );

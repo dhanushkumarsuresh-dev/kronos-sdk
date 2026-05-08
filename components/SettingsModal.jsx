@@ -3,6 +3,7 @@ import { emitConfigChange } from '../hooks/useConfig';
 
 const DEFAULT_CONFIG = {
   mode: 'demo',
+  verbose: true,
   apiKeys: {
     etoroPublic: '',
     etoroUser: '',
@@ -31,6 +32,7 @@ export default function SettingsModal({ onClose, onSaved }) {
         const parsed = JSON.parse(raw);
         setConfig({
           mode: parsed.mode === 'real' ? 'real' : 'demo',
+          verbose: parsed.verbose !== false,
           apiKeys: { ...DEFAULT_CONFIG.apiKeys, ...(parsed.apiKeys || {}) },
           strategy: { ...DEFAULT_CONFIG.strategy, ...(parsed.strategy || {}) },
           chart: { ...DEFAULT_CONFIG.chart, ...(parsed.chart || {}) },
@@ -237,6 +239,22 @@ export default function SettingsModal({ onClose, onSaved }) {
           )}
         </section>
 
+        <section className="section">
+          <h3>Diagnostics</h3>
+          <p className="section-note">
+            Verbose mode includes full request/response bodies in the Network tab and trade log.
+            Sensitive headers are always masked.
+          </p>
+          <label className="check-row">
+            <input
+              type="checkbox"
+              checked={config.verbose !== false}
+              onChange={(e) => setConfig((c) => ({ ...c, verbose: e.target.checked }))}
+            />
+            <span>Capture verbose request/response bodies</span>
+          </label>
+        </section>
+
         <footer className="modal-footer">
           <button type="button" className="ghost-btn" onClick={handleClear}>
             Wipe Config
@@ -391,6 +409,15 @@ export default function SettingsModal({ onClose, onSaved }) {
             font-size: 11px;
             color: #d29922;
           }
+          .check-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #e6edf3;
+            cursor: pointer;
+          }
+          .check-row input { width: 16px; height: 16px; }
           .grid {
             display: grid;
             grid-template-columns: 1fr 1fr;

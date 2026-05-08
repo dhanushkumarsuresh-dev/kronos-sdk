@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useKronos } from '../hooks/useKronos';
 import { useConfig } from '../hooks/useConfig';
 import SettingsModal from './SettingsModal';
-import LogViewer from './LogViewer';
 import PriceChart from './PriceChart';
 import PortfolioStrip from './PortfolioStrip';
 import PositionsTable from './PositionsTable';
 import MarketPanel from './MarketPanel';
+import DiagnosticsPanel from './DiagnosticsPanel';
 
 export default function Dashboard() {
   const { isActive, setIsActive, logs, clearLogs, lastCycleAt, intervalMs } = useKronos();
@@ -125,13 +125,7 @@ export default function Dashboard() {
 
         <section className="grid-row bottom">
           <PositionsTable config={config} />
-          <div className="log-panel">
-            <div className="log-header">
-              <span>Trade Log</span>
-              <button className="link-btn" onClick={clearLogs}>Clear</button>
-            </div>
-            <LogViewer logs={logs} />
-          </div>
+          <DiagnosticsPanel logs={logs} onClearLogs={clearLogs} config={config} />
         </section>
       </main>
 
@@ -350,32 +344,6 @@ export default function Dashboard() {
           color: #6e7888;
           text-align: center;
           line-height: 1.5;
-        }
-        .log-panel {
-          display: flex;
-          flex-direction: column;
-          background: #0d1320;
-          border: 1px solid #1d2433;
-          border-radius: 12px;
-          min-height: 0;
-          overflow: hidden;
-        }
-        .log-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 12px 16px;
-          border-bottom: 1px solid #1d2433;
-          font-size: 12px;
-          letter-spacing: 2px;
-          color: #6e7888;
-          flex-shrink: 0;
-        }
-        .link-btn {
-          background: transparent;
-          color: #58a6ff;
-          font-size: 11px;
-          letter-spacing: 1px;
         }
       `}</style>
     </div>

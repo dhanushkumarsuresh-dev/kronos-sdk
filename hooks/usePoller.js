@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNetworkLog } from './useNetworkLog';
 
-export function usePoller({ enabled, intervalMs, fetcher, deps = [] }) {
+export function usePoller({ enabled, intervalMs, fetcher, source = 'poller', deps = [] }) {
+  const { append } = useNetworkLog();
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -16,10 +18,12 @@ export function usePoller({ enabled, intervalMs, fetcher, deps = [] }) {
     setLoading(true);
     try {
       const result = await fetcher();
+      if (result?.debug?.requests) append(result.debug.requests, source);
       setData(result);
       setError(null);
       setUpdatedAt(new Date());
     } catch (e) {
+      if (e?.debug?.requests) append(e.debug.requests, source);
       setError(e?.message || 'Request failed');
     } finally {
       setLoading(false);

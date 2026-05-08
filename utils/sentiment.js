@@ -23,22 +23,22 @@ function isoDate(unixSeconds) {
   return new Date(unixSeconds * 1000).toISOString().split('T')[0];
 }
 
-async function fetchForexNews(finnhubKey) {
+async function fetchForexNews(finnhubKey, fetcher = fetch) {
   const url = `https://finnhub.io/api/v1/news?category=forex&token=${encodeURIComponent(finnhubKey)}`;
-  const res = await fetch(url);
+  const res = await fetcher(url);
   if (!res.ok) {
     throw new Error(`Finnhub forex news failed (${res.status})`);
   }
   return res.json();
 }
 
-async function fetchCompanyNews(finnhubKey, symbol) {
+async function fetchCompanyNews(finnhubKey, symbol, fetcher = fetch) {
   const from = isoDate(hoursAgo(48));
   const to = isoDate(Math.floor(Date.now() / 1000));
   const url = `https://finnhub.io/api/v1/company-news?symbol=${encodeURIComponent(
     symbol
   )}&from=${from}&to=${to}&token=${encodeURIComponent(finnhubKey)}`;
-  const res = await fetch(url);
+  const res = await fetcher(url);
   if (!res.ok) return [];
   return res.json();
 }
@@ -53,7 +53,7 @@ function filterRelevant(articles, asset) {
   });
 }
 
-export async function calculateSentiment(finnhubKey, asset) {
+export async function calculateSentiment(finnhubKey, asset, { fetcher = fetch } = {}) {
   if (!finnhubKey) {
     return 0;
   }
@@ -62,9 +62,9 @@ export async function calculateSentiment(finnhubKey, asset) {
   try {
     const symbol = asset.toUpperCase();
     if (/^[A-Z]{3}[A-Z]{3}$/.test(symbol)) {
-      articles = await fetchForexNews(finnhubKey);
+      articles = await fetchForexNews(finnhubKey, fetcher);
     } else {
-      articles = await fetchCompanyNews(finnhubKey, symbol);
+      articles = await fetchCompanyNews(finnhubKey, symbol, fetcher);
     }
   } catch {
     return 0;

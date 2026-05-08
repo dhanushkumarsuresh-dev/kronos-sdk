@@ -33,7 +33,7 @@ export function normalizeResolution(resolution) {
   return RESOLUTION_MAP[resolution] || '15';
 }
 
-export async function fetchCandles(finnhubKey, asset, resolution = '15', count = 200) {
+export async function fetchCandles(finnhubKey, asset, resolution = '15', count = 200, { fetcher = fetch } = {}) {
   if (!finnhubKey) throw new Error('Finnhub key missing.');
 
   const { provider, symbol } = mapSymbol(asset);
@@ -49,7 +49,7 @@ export async function fetchCandles(finnhubKey, asset, resolution = '15', count =
     symbol
   )}&resolution=${res}&from=${from}&to=${to}&token=${encodeURIComponent(finnhubKey)}`;
 
-  const response = await fetch(url);
+  const response = await fetcher(url);
   if (!response.ok) {
     const text = await response.text().catch(() => '');
     throw new Error(`Finnhub candles failed (${response.status}): ${text}`);
@@ -71,7 +71,7 @@ export async function fetchCandles(finnhubKey, asset, resolution = '15', count =
   return { candles, symbol, provider };
 }
 
-export async function fetchQuote(finnhubKey, asset) {
+export async function fetchQuote(finnhubKey, asset, { fetcher = fetch } = {}) {
   if (!finnhubKey) throw new Error('Finnhub key missing.');
   const { provider, symbol } = mapSymbol(asset);
   if (provider !== 'stock') {
@@ -80,7 +80,7 @@ export async function fetchQuote(finnhubKey, asset) {
   const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(
     symbol
   )}&token=${encodeURIComponent(finnhubKey)}`;
-  const res = await fetch(url);
+  const res = await fetcher(url);
   if (!res.ok) throw new Error(`Finnhub quote failed (${res.status})`);
   return res.json();
 }

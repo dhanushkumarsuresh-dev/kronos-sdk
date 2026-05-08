@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNetworkLog } from './useNetworkLog';
 
 const KRONOS_INTERVAL_MS = 15 * 60 * 1000;
 
@@ -8,11 +9,18 @@ export function useKronos() {
   const [lastCycleAt, setLastCycleAt] = useState(null);
   const timerRef = useRef(null);
   const inFlightRef = useRef(false);
+  const { append: appendNetwork } = useNetworkLog();
 
-  const addLog = useCallback((msg, level = 'info') => {
+  const addLog = useCallback((msg, level = 'info', details) => {
     setLogs((prev) => [
       ...prev,
-      { id: `${Date.now()}-${Math.random()}`, time: new Date().toLocaleTimeString(), msg, level },
+      {
+        id: `${Date.now()}-${Math.random()}`,
+        time: new Date().toLocaleTimeString(),
+        msg,
+        level,
+        details: details || null,
+      },
     ]);
   }, []);
 
@@ -55,11 +63,17 @@ export function useKronos() {
 
       const data = await res.json().catch(() => ({ message: 'Invalid response from server.' }));
 
+      if (data?.debug?.requests) appendNetwork(data.debug.requests, 'trade');
+
       if (!res.ok) {
-        addLog(`Kronos: ${data.message || `HTTP ${res.status}`}`, 'error');
+        addLog(
+          `Kronos: ${data.message || `HTTP ${res.status}`}${data.hint ? ` — ${data.hint}` : ''}`,
+          'error',
+          data
+        );
       } else {
         const level = data.message?.startsWith('SUCCESS') ? 'success' : 'info';
-        addLog(`Kronos: ${data.message}`, level);
+        addLog(`Kronos: ${data.message}`, level, data);
       }
     } catch (error) {
       addLog(`ERROR: API connection failed. ${error.message || ''}`.trim(), 'error');
@@ -67,7 +81,7 @@ export function useKronos() {
       inFlightRef.current = false;
       setLastCycleAt(new Date());
     }
-  }, [addLog]);
+  }, [addLog, appendNetwork]);
 
   useEffect(() => {
     if (isActive) {
