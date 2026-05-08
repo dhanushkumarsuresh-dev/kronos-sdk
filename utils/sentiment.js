@@ -9,6 +9,12 @@ const ASSET_QUERY_MAP = {
   XAUUSD: ['gold', 'XAU', 'precious metals'],
 };
 
+let cachedScore = { score: null, asset: null, timestamp: null };
+
+export function getCachedSentiment() {
+  return cachedScore;
+}
+
 function hoursAgo(h) {
   return Math.floor((Date.now() - h * 60 * 60 * 1000) / 1000);
 }
@@ -75,5 +81,7 @@ export async function calculateSentiment(finnhubKey, asset) {
     total += result.compound;
   }
 
-  return Number((total / relevant.length).toFixed(3));
+  const score = Number((total / relevant.length).toFixed(3));
+  cachedScore = { score, asset: asset.toUpperCase(), timestamp: Date.now() };
+  return score;
 }

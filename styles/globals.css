@@ -11,6 +11,9 @@ body {
   color: #e6edf3;
   font-family: 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
   font-size: 14px;
+}
+
+body {
   overflow: hidden;
 }
 

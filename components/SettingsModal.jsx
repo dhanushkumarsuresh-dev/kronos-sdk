@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { emitConfigChange } from '../hooks/useConfig';
 
 const DEFAULT_CONFIG = {
   apiKeys: {
@@ -11,6 +12,10 @@ const DEFAULT_CONFIG = {
     riskPerTrade: 0.02,
     leverage: 30,
     rewardRatio: 2,
+  },
+  chart: {
+    asset: '',
+    timeframe: '15',
   },
 };
 
@@ -26,6 +31,7 @@ export default function SettingsModal({ onClose, onSaved }) {
         setConfig({
           apiKeys: { ...DEFAULT_CONFIG.apiKeys, ...(parsed.apiKeys || {}) },
           strategy: { ...DEFAULT_CONFIG.strategy, ...(parsed.strategy || {}) },
+          chart: { ...DEFAULT_CONFIG.chart, ...(parsed.chart || {}) },
         });
       } catch {
         // ignore corrupt config
@@ -39,9 +45,13 @@ export default function SettingsModal({ onClose, onSaved }) {
   const updateStrategy = (key, value) =>
     setConfig((c) => ({ ...c, strategy: { ...c.strategy, [key]: value } }));
 
+  const updateChart = (key, value) =>
+    setConfig((c) => ({ ...c, chart: { ...c.chart, [key]: value } }));
+
   const handleSave = (e) => {
     e.preventDefault();
     localStorage.setItem('kronos_config', JSON.stringify(config));
+    emitConfigChange();
     onSaved?.();
   };
 
@@ -49,6 +59,7 @@ export default function SettingsModal({ onClose, onSaved }) {
     if (!confirm('Wipe Kronos config from this browser?')) return;
     localStorage.removeItem('kronos_config');
     setConfig(DEFAULT_CONFIG);
+    emitConfigChange();
     onSaved?.();
   };
 
@@ -156,6 +167,42 @@ export default function SettingsModal({ onClose, onSaved }) {
           </div>
         </section>
 
+        <section className="section">
+          <h3>Chart</h3>
+          <p className="section-note">
+            Defaults to your strategy asset. Override here to watch a different market.
+          </p>
+          <div className="grid">
+            <label className="field">
+              <span>Chart Asset (override)</span>
+              <input
+                type="text"
+                value={config.chart.asset}
+                onChange={(e) => updateChart('asset', e.target.value.toUpperCase())}
+                placeholder={config.strategy.asset || 'EURUSD'}
+              />
+            </label>
+            <label className="field">
+              <span>Default Timeframe</span>
+              <select
+                value={config.chart.timeframe}
+                onChange={(e) => updateChart('timeframe', e.target.value)}
+              >
+                <option value="1">1 minute</option>
+                <option value="5">5 minutes</option>
+                <option value="15">15 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="D">1 day</option>
+              </select>
+            </label>
+          </div>
+          {!config.apiKeys.finnhub && (
+            <p className="warn-note">
+              ⚠ Chart and sentiment features require a Finnhub key.
+            </p>
+          )}
+        </section>
+
         <footer className="modal-footer">
           <button type="button" className="ghost-btn" onClick={handleClear}>
             Wipe Config
@@ -244,7 +291,8 @@ export default function SettingsModal({ onClose, onSaved }) {
             letter-spacing: 1px;
             text-transform: uppercase;
           }
-          .field input {
+          .field input,
+          .field select {
             background: #0a0e1a;
             border: 1px solid #1d2433;
             color: #e6edf3;
@@ -253,8 +301,14 @@ export default function SettingsModal({ onClose, onSaved }) {
             font-size: 13px;
             outline: none;
           }
-          .field input:focus {
+          .field input:focus,
+          .field select:focus {
             border-color: #1f6feb;
+          }
+          .warn-note {
+            font-size: 11px;
+            color: #d29922;
+            margin-top: 4px;
           }
           .grid {
             display: grid;

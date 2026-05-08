@@ -25,6 +25,18 @@ export async function fetchPnL(apiKeys) {
   return res.json();
 }
 
+export async function fetchPositions(apiKeys) {
+  const res = await fetch(`${ETORO_BASE_URL}/trading/positions/real`, {
+    headers: buildHeaders(apiKeys),
+  });
+  if (!res.ok) {
+    const err = new Error(`eToro positions fetch failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
+}
+
 export async function placeOrder(apiKeys, orderPayload) {
   const res = await fetch(`${ETORO_BASE_URL}/orders`, {
     method: 'POST',
