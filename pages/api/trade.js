@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { apiKeys, strategy } = req.body || {};
+  const { apiKeys, strategy, mode = 'demo' } = req.body || {};
 
   if (!apiKeys?.etoroPublic || !apiKeys?.etoroUser) {
     return res.status(400).json({ message: 'Missing eToro credentials in payload.' });
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     const isBullish = sentimentScore >= 0.5;
 
     // STEP 2: ETORO ACCOUNT VALIDATION
-    const accountData = await fetchPnL(apiKeys);
+    const accountData = await fetchPnL(apiKeys, mode);
     const capital = Number(accountData?.credit ?? accountData?.equity ?? 0);
 
     if (!capital || capital <= 0) {

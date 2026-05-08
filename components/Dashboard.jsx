@@ -58,6 +58,9 @@ export default function Dashboard() {
           <span className="brand-tag">Serverless Trading Terminal</span>
         </div>
         <div className="topbar-actions">
+          {config?.mode && (
+            <span className={`mode-badge ${config.mode}`}>{config.mode.toUpperCase()}</span>
+          )}
           <span className="clock">{now.toLocaleTimeString()}</span>
           <button className="icon-btn" onClick={() => setSettingsOpen(true)} aria-label="Settings">
             Settings
@@ -188,6 +191,24 @@ export default function Dashboard() {
         .clock {
           color: #6e7888;
           font-size: 13px;
+        }
+        .mode-badge {
+          font-size: 10px;
+          letter-spacing: 2px;
+          font-weight: 700;
+          padding: 4px 10px;
+          border-radius: 4px;
+          border: 1px solid;
+        }
+        .mode-badge.demo {
+          color: #58a6ff;
+          border-color: #1f6feb55;
+          background: #1f6feb15;
+        }
+        .mode-badge.real {
+          color: #ff7b72;
+          border-color: #f8514955;
+          background: #f8514915;
         }
         .icon-btn {
           background: #161b27;
