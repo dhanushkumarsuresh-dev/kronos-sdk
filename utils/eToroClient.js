@@ -14,19 +14,27 @@ function buildHeaders(apiKeys, extra = {}) {
   };
 }
 
-export async function fetchPnL(apiKeys) {
-  const res = await fetch(`${ETORO_BASE_URL}/trading/info/real/pnl`, {
+function normalizeMode(mode) {
+  return mode === 'real' ? 'real' : 'demo';
+}
+
+export async function fetchPnL(apiKeys, mode = 'demo') {
+  const m = normalizeMode(mode);
+  const res = await fetch(`${ETORO_BASE_URL}/trading/info/${m}/pnl`, {
     headers: buildHeaders(apiKeys),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`eToro PnL fetch failed (${res.status}): ${text}`);
+    const err = new Error(`eToro PnL fetch failed (${res.status}): ${text}`);
+    err.status = res.status;
+    throw err;
   }
   return res.json();
 }
 
-export async function fetchPositions(apiKeys) {
-  const res = await fetch(`${ETORO_BASE_URL}/trading/positions/real`, {
+export async function fetchPositions(apiKeys, mode = 'demo') {
+  const m = normalizeMode(mode);
+  const res = await fetch(`${ETORO_BASE_URL}/trading/positions/${m}`, {
     headers: buildHeaders(apiKeys),
   });
   if (!res.ok) {

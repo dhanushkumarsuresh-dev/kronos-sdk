@@ -20,21 +20,28 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { apiKeys } = req.body || {};
+  const { apiKeys, mode = 'demo' } = req.body || {};
   if (!apiKeys?.etoroPublic || !apiKeys?.etoroUser) {
     return res.status(400).json({ message: 'Missing eToro credentials.' });
   }
 
   try {
-    const data = await fetchPositions(apiKeys);
+    const data = await fetchPositions(apiKeys, mode);
     const list = Array.isArray(data) ? data : data?.positions || [];
-    return res.status(200).json({ positions: list.map(normalize) });
+    return res.status(200).json({ positions: list.map(normalize), mode });
   } catch (error) {
     if (error.status === 404) {
       return res
         .status(200)
         .json({ positions: [], unavailable: true, message: 'Positions endpoint unavailable on this account tier.' });
     }
-    return res.status(502).json({ message: error.message || 'Positions fetch failed.' });
+    const status = error.status === 403 ? 403 : 502;
+    return res.status(status).json({
+      message: error.message || 'Positions fetch failed.',
+      hint:
+        error.status === 403
+          ? `403 from eToro. Check Account Mode (${mode}) and app scopes.`
+          : undefined,
+    });
   }
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { emitConfigChange } from '../hooks/useConfig';
 
 const DEFAULT_CONFIG = {
+  mode: 'demo',
   apiKeys: {
     etoroPublic: '',
     etoroUser: '',
@@ -29,6 +30,7 @@ export default function SettingsModal({ onClose, onSaved }) {
       try {
         const parsed = JSON.parse(raw);
         setConfig({
+          mode: parsed.mode === 'real' ? 'real' : 'demo',
           apiKeys: { ...DEFAULT_CONFIG.apiKeys, ...(parsed.apiKeys || {}) },
           strategy: { ...DEFAULT_CONFIG.strategy, ...(parsed.strategy || {}) },
           chart: { ...DEFAULT_CONFIG.chart, ...(parsed.chart || {}) },
@@ -72,6 +74,38 @@ export default function SettingsModal({ onClose, onSaved }) {
             ×
           </button>
         </header>
+
+        <section className="section">
+          <h3>Account Mode</h3>
+          <p className="section-note">
+            eToro splits PnL and positions endpoints between Demo (virtual) and Real money accounts.
+            A 403 from <code>/trading/info/real/pnl</code> almost always means you have a Demo account
+            but Kronos is hitting the Real path (or vice-versa).
+          </p>
+          <div className="mode-toggle">
+            <button
+              type="button"
+              className={`mode-btn ${config.mode === 'demo' ? 'active' : ''}`}
+              onClick={() => setConfig((c) => ({ ...c, mode: 'demo' }))}
+            >
+              <span className="mode-label">DEMO</span>
+              <span className="mode-sub">Virtual account · safe</span>
+            </button>
+            <button
+              type="button"
+              className={`mode-btn real ${config.mode === 'real' ? 'active' : ''}`}
+              onClick={() => setConfig((c) => ({ ...c, mode: 'real' }))}
+            >
+              <span className="mode-label">REAL</span>
+              <span className="mode-sub">Live money · danger</span>
+            </button>
+          </div>
+          {config.mode === 'real' && (
+            <p className="warn-note">
+              ⚠ Real-money mode. Kronos will place live orders on your eToro account.
+            </p>
+          )}
+        </section>
 
         <section className="section">
           <div className="section-head">
@@ -309,6 +343,53 @@ export default function SettingsModal({ onClose, onSaved }) {
             font-size: 11px;
             color: #d29922;
             margin-top: 4px;
+          }
+          .mode-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+          }
+          .mode-btn {
+            background: #0a0e1a;
+            border: 1px solid #1d2433;
+            color: #e6edf3;
+            padding: 14px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-start;
+            text-align: left;
+            transition: all 0.15s;
+          }
+          .mode-btn:hover { border-color: #2a3142; }
+          .mode-btn.active {
+            border-color: #1f6feb;
+            background: #1f6feb15;
+          }
+          .mode-btn.real.active {
+            border-color: #f85149;
+            background: #f8514915;
+          }
+          .mode-label {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 3px;
+          }
+          .mode-btn.real .mode-label { color: #ff7b72; }
+          .mode-btn.active .mode-label { color: #58a6ff; }
+          .mode-btn.real.active .mode-label { color: #ff7b72; }
+          .mode-sub {
+            font-size: 10px;
+            color: #6e7888;
+            letter-spacing: 1px;
+          }
+          code {
+            background: #0a0e1a;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #d29922;
           }
           .grid {
             display: grid;
